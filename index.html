@@ -260,11 +260,11 @@
   <section class="block" id="listen">
     <div class="head"><h2>Listen <span class="accent">anywhere</span></h2><p>On your phone, desktop, or your favourite radio app. Same stream, everywhere.</p></div>
     <div class="apps">
-      <a class="app" href="#" id="webPlay"><div class="ai">▶</div><div><div class="at">Web player</div><div class="as">right here</div></div></a>
-      <a class="app" href="https://stream.zeno.fm/6vc4ddpr3ehvv.m3u"><div class="ai">♫</div><div><div class="at">.m3u</div><div class="as">VLC, Winamp…</div></div></a>
-      <a class="app" href="https://stream.zeno.fm/6vc4ddpr3ehvv.pls"><div class="ai">♪</div><div><div class="at">.pls</div><div class="as">external player</div></div></a>
+      <a class="app" href="https://azura149fm.duckdns.org/public/149fm" target="_blank" rel="noopener"><div class="ai">▶</div><div><div class="at">Web player</div><div class="as">full AzuraCast page</div></div></a>
+      <a class="app" href="https://azura149fm.duckdns.org/public/149fm/playlist.m3u"><div class="ai">♫</div><div><div class="at">.m3u</div><div class="as">VLC, Winamp…</div></div></a>
+      <a class="app" href="https://azura149fm.duckdns.org/public/149fm/playlist.pls"><div class="ai">♪</div><div><div class="at">.pls</div><div class="as">external player</div></div></a>
       <a class="app" href="#"><div class="ai">T</div><div><div class="at">TuneIn</div><div class="as">search "149FM"</div></div></a>
-      <a class="app" href="#"><div class="ai">Z</div><div><div class="at">Zeno.FM app</div><div class="as">iOS / Android</div></div></a>
+      <a class="app" href="https://zeno.fm/radio/149-fm/" target="_blank" rel="noopener"><div class="ai">Z</div><div><div class="at">Zeno.FM app</div><div class="as">iOS / Android</div></div></a>
     </div>
   </section>
 
@@ -343,7 +343,6 @@
   var audio = $('audio');
   $('ppBtn').addEventListener('click', toggle);
   $('heroBtn').addEventListener('click', toggle);
-  $('webPlay').addEventListener('click', function(e){ e.preventDefault(); if(!playing) toggle(); window.scrollTo({top:0,behavior:'smooth'}); });
   audio.addEventListener('pause', function(){ playing=false; setIcons(); });
   audio.addEventListener('playing', function(){ playing=true; document.body.classList.remove('offline'); setIcons(); });
   audio.addEventListener('error', markOffline);
@@ -483,22 +482,32 @@
   function hm(iso){ return (iso||'').substr(11,5); }            // station-local time straight from ISO
   function dayLabel(ymdStr){ var p=ymdStr.split('-'); var dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])); return DOW[dt.getUTCDay()]+' '+(+p[2]); }
 
+  function sortByStart(items){ return items.slice().sort(function(a,b){ return (a.start_timestamp||0)-(b.start_timestamp||0); }); }
   function renderLineup(items){
+    items=sortByStart(items);
     var start=0; for(var k=0;k<items.length;k++){ if(items[k].is_now){ start=k; break; } }
-    var list=items.slice(start, start+5), html='', shownNext=false;
-    if(!list.length){ return; }
-    list.forEach(function(it){
+    var slice=items.slice(start), html='', shownNext=false, seen={}, count=0;
+    for(var i=0;i<slice.length && count<5;i++){
+      var it=slice[i], key=(it.name||it.title||'')+'|'+hm(it.start);
+      if(seen[key]) continue; seen[key]=1;                 // skip the same show repeating on a later day
       var badge='';
       if(it.is_now){ badge='<span class="badge live">● On now</span>'; }
       else if(!shownNext){ badge='<span class="badge next">Up next</span>'; shownNext=true; }
       html+='<div class="slot'+(it.is_now?' now':'')+'"><span class="time">'+hm(it.start)+'–'+hm(it.end)+'</span><div><div class="name">'+esc(it.name||it.title||'—')+'</div></div>'+(badge||'<span></span>')+'</div>';
-    });
-    $('todayList').innerHTML=html;
+      count++;
+    }
+    if(html) $('todayList').innerHTML=html;
   }
   function renderWeek(items){
+    items=sortByStart(items);
     var byDay={}, order=[], todayStr=null;
     items.forEach(function(it){ if(it.is_now) todayStr=(it.start||'').substr(0,10); });
-    items.forEach(function(it){ var d=(it.start||'').substr(0,10); if(!d) return; if(!byDay[d]){ byDay[d]=[]; order.push(d); } byDay[d].push(it); });
+    items.forEach(function(it){
+      var d=(it.start||'').substr(0,10); if(!d) return;
+      if(!byDay[d]){ byDay[d]=[]; order.push(d); }
+      var key=(it.name||it.title||'')+'|'+hm(it.start);
+      if(!byDay[d].some(function(x){return x._k===key;})){ it._k=key; byDay[d].push(it); }  // dedup within the day
+    });
     if(order.length<2){ $('weekGrid').style.display='none'; return; }   // only ~1 day returned → hide grid
     var html='';
     order.slice(0,7).forEach(function(d){

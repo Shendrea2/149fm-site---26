@@ -1,6 +1,6 @@
 /* 149FM service worker — minimal & safe.
    Bump CACHE when you change index.html so users get the new version. */
-const CACHE = '149fm-v3';
+const CACHE = '149fm-v4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
