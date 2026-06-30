@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>149FM — Online Radio, 24/7, No Genre Rules</title>
+<meta name="description" content="149FM — independent online radio, non-stop. From DnB to Nu Metal, Jazz to Hip Hop. Listen live, anywhere.">
+<meta name="theme-color" content="#0E1219">
+<meta property="og:type" content="website">
+<meta property="og:title" content="149FM — Online Radio 24/7">
+<meta property="og:description" content="Non-stop music, no genre rules. Listen live, anywhere.">
+<meta property="og:site_name" content="149FM">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E1219'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='900' font-size='15' fill='%234D9DFF' text-anchor='middle'%3E149%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesque:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E1219;--ink-2:#141A24;--surface:#1A212C;--surface-2:#212A37;
+    --line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
+    --text:#E8EDF4;--muted:#94A1B3;--muted-2:#677488;
+    --blue:#4D9DFF;--blue-deep:#2C6FD6;--amber:#F2B45A;
+    --max:1120px;--disp:'Anton',sans-serif;--body:'Hanken Grotesque',sans-serif;--mono:'Space Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--body);background:var(--ink);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;padding-bottom:100px;position:relative;overflow-x:hidden}
+  /* ambient album-art backdrop */
+  #ambient{position:fixed;inset:-60px;z-index:-2;background-size:cover;background-position:center;filter:blur(70px) saturate(1.3);opacity:0;transition:opacity 1.2s;transform:scale(1.1)}
+  body.has-art #ambient{opacity:.28}
+  #ambient-veil{position:fixed;inset:0;z-index:-1;background:
+    radial-gradient(900px 500px at 80% -10%,rgba(77,157,255,.10),transparent 60%),
+    linear-gradient(180deg,rgba(14,18,25,.72),rgba(14,18,25,.92))}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 22px}
+
+  header.nav{position:sticky;top:0;z-index:40;background:rgba(14,18,25,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand .logo{font-family:var(--disp);font-size:26px;letter-spacing:.02em;line-height:1}
+  .brand .logo b{color:var(--blue)}
+  .brand .freq{font-family:var(--mono);font-size:11px;color:var(--muted-2);letter-spacing:.1em}
+  nav.links{display:flex;gap:26px}
+  nav.links a{font-size:14px;font-weight:500;color:var(--muted);transition:color .2s}
+  nav.links a:hover{color:var(--text)}
+  .nav-live{display:none;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--amber)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite;flex-shrink:0}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(242,180,90,.5)}70%{box-shadow:0 0 0 8px rgba(242,180,90,0)}100%{box-shadow:0 0 0 0 rgba(242,180,90,0)}}
+  body.offline .dot{background:var(--muted-2);animation:none}
+
+  .hero{padding:60px 0 50px}
+  .hero .onair{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--amber);border:1px solid rgba(242,180,90,.35);padding:6px 12px;border-radius:999px;margin-bottom:26px}
+  body.offline .hero .onair{color:var(--muted-2);border-color:var(--line-2)}
+  .hero h1{font-family:var(--disp);font-size:clamp(46px,9vw,100px);line-height:.92;letter-spacing:.005em}
+  .hero h1 .num{color:var(--blue)}
+  .hero .tag{font-size:clamp(16px,2.4vw,20px);color:var(--muted);max-width:580px;margin-top:18px}
+  .hero .tag b{color:var(--text);font-weight:600}
+
+  .nowcard{margin-top:38px;background:linear-gradient(180deg,rgba(26,33,44,.86),rgba(20,26,36,.86));border:1px solid var(--line-2);border-radius:18px;padding:22px;display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;backdrop-filter:blur(6px)}
+  .art{width:108px;height:108px;border-radius:12px;background:var(--surface-2);object-fit:cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:26px;color:var(--blue);border:1px solid var(--line)}
+  .nowmeta{min-width:0}
+  .nowmeta .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--muted-2);text-transform:uppercase}
+  .nowmeta .show{font-family:var(--disp);font-size:clamp(22px,3.4vw,34px);line-height:1.04;margin:7px 0 5px}
+  .nowmeta .track{color:var(--text);font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nowmeta .nxt{color:var(--muted);font-size:13px;margin-top:6px;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nowact{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-family:var(--mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--line);padding:6px 11px;border-radius:999px;cursor:pointer;transition:border-color .2s,color .2s}
+  .chip:hover{border-color:var(--blue);color:var(--text)}
+  .eq{display:flex;align-items:flex-end;gap:4px;height:46px}
+  .eq span{width:5px;background:linear-gradient(var(--blue),var(--blue-deep));border-radius:3px;height:14px;animation:bounce 1s ease-in-out infinite}
+  .eq span:nth-child(2){animation-delay:.18s}.eq span:nth-child(3){animation-delay:.36s}.eq span:nth-child(4){animation-delay:.10s}.eq span:nth-child(5){animation-delay:.46s}.eq span:nth-child(6){animation-delay:.28s}.eq span:nth-child(7){animation-delay:.05s}
+  @keyframes bounce{0%,100%{height:12px}50%{height:44px}}
+  body.paused .eq span,body.offline .eq span{animation-play-state:paused;height:12px}
+
+  .heroplay{display:flex;align-items:center;gap:16px;margin-top:28px;flex-wrap:wrap}
+  .btn-play{display:inline-flex;align-items:center;gap:12px;background:var(--blue);color:#07101f;border:none;font-family:var(--body);font-weight:700;font-size:17px;padding:15px 26px;border-radius:999px;cursor:pointer;transition:transform .15s,background .2s}
+  .btn-play:hover{background:#65abff;transform:translateY(-1px)}
+  .btn-play .ico{font-size:18px;line-height:1}
+  .listeners{font-family:var(--mono);font-size:13px;color:var(--muted)}
+
+  section.block{padding:54px 0;border-top:1px solid var(--line);position:relative}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:26px;flex-wrap:wrap}
+  .head h2{font-family:var(--disp);font-size:clamp(28px,5vw,46px);line-height:1;letter-spacing:.01em}
+  .head h2 .accent{color:var(--blue)}
+  .head p{color:var(--muted);font-size:15px;max-width:380px}
+
+  .today{display:flex;flex-direction:column;gap:10px}
+  .slot{display:grid;grid-template-columns:104px 1fr auto;gap:18px;align-items:center;background:rgba(20,26,36,.7);border:1px solid var(--line);border-radius:12px;padding:16px 18px;transition:border-color .2s}
+  .slot:hover{border-color:var(--line-2)}
+  .slot .time{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .slot .name{font-weight:600;font-size:17px}
+  .slot .genre{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2)}
+  .slot.now{background:linear-gradient(90deg,rgba(242,180,90,.12),rgba(242,180,90,.02));border-color:rgba(242,180,90,.4)}
+  .slot.now .time{color:var(--amber)}
+  .badge{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:4px 9px;border-radius:6px;white-space:nowrap}
+  .badge.live{background:var(--amber);color:#1c1304}
+  .badge.next{background:rgba(77,157,255,.16);color:var(--blue);border:1px solid rgba(77,157,255,.3)}
+  .week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:24px}
+  .day{background:rgba(20,26,36,.7);border:1px solid var(--line);border-radius:10px;padding:12px 10px;min-height:118px}
+  .day.is-today{border-color:var(--blue);background:rgba(77,157,255,.06)}
+  .day .d{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .day.is-today .d{color:var(--blue)}
+  .day ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+  .day li{font-size:12px;color:var(--muted);line-height:1.3}
+  .day li b{color:var(--text);font-weight:600;display:block;font-size:12.5px}
+
+  .recent{display:flex;flex-direction:column}
+  .rrow{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--line);transition:background .2s}
+  .rrow:first-child{border-top:1px solid var(--line)}
+  .rrow:hover{background:rgba(255,255,255,.02)}
+  .rrow .rart{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--surface-2);border:1px solid var(--line)}
+  .rrow .rname{min-width:0}
+  .rrow .rname b{font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rrow .rname span{color:var(--muted);font-size:13px}
+  .rrow .rt{font-family:var(--mono);font-size:11px;color:var(--muted-2);white-space:nowrap}
+
+  .about{display:grid;grid-template-columns:1.3fr .9fr;gap:40px;align-items:start}
+  .about p{color:var(--muted);font-size:16.5px;margin-bottom:16px}
+  .about p b{color:var(--text);font-weight:600}
+  .facts{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .fact{background:rgba(20,26,36,.8);padding:18px 20px}
+  .fact .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin-bottom:6px}
+  .fact .v{font-family:var(--disp);font-size:30px;line-height:1}
+  .fact .v small{font-family:var(--body);font-size:14px;color:var(--muted);font-weight:500;letter-spacing:0}
+
+  .apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .app{display:flex;align-items:center;gap:14px;background:rgba(20,26,36,.7);border:1px solid var(--line);border-radius:12px;padding:15px 16px;transition:border-color .2s,transform .15s}
+  .app:hover{border-color:var(--blue);transform:translateY(-2px)}
+  .app .ai{width:36px;height:36px;border-radius:9px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:15px;color:var(--blue);flex-shrink:0}
+  .app .at{font-weight:600;font-size:15px}
+  .app .as{font-size:12px;color:var(--muted-2);font-family:var(--mono)}
+
+  .support{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+  .scard{background:rgba(20,26,36,.7);border:1px solid var(--line);border-radius:14px;padding:22px;transition:border-color .2s,transform .15s}
+  .scard:hover{border-color:var(--amber);transform:translateY(-2px)}
+  .scard .si{font-size:22px;margin-bottom:10px}
+  .scard h3{font-size:18px;margin-bottom:6px}
+  .scard p{color:var(--muted);font-size:14px}
+
+  footer{border-top:1px solid var(--line);padding:42px 0 28px;color:var(--muted)}
+  .foot{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:30px}
+  .foot .logo{font-family:var(--disp);font-size:30px;margin-bottom:10px}
+  .foot .logo b{color:var(--blue)}
+  .foot p{font-size:14px;max-width:300px}
+  .foot h4{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);margin-bottom:14px}
+  .foot ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .foot ul a{font-size:14px;color:var(--muted);transition:color .2s}
+  .foot ul a:hover{color:var(--text)}
+  .copy{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--muted-2);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+
+  .player{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(20,26,36,.94);backdrop-filter:blur(16px);border-top:1px solid var(--line-2)}
+  .player-in{max-width:var(--max);margin:0 auto;padding:0 22px;height:86px;display:grid;grid-template-columns:auto auto 1fr auto auto;gap:14px;align-items:center}
+  .pp{width:50px;height:50px;border-radius:50%;background:var(--blue);border:none;color:#07101f;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .2s;flex-shrink:0}
+  .pp:hover{background:#65abff;transform:scale(1.05)}
+  .part{width:50px;height:50px;border-radius:9px;object-fit:cover;background:var(--surface-2);border:1px solid var(--line)}
+  .pinfo{min-width:0}
+  .pinfo .pl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.offline .pinfo .pl{color:var(--muted-2)}
+  .pinfo .pt{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pinfo .pt span{color:var(--muted);font-weight:400}
+  .ptools{display:flex;align-items:center;gap:6px}
+  .ptool{background:none;border:1px solid var(--line);color:var(--muted);width:38px;height:38px;border-radius:9px;cursor:pointer;font-size:15px;transition:border-color .2s,color .2s;position:relative}
+  .ptool:hover{border-color:var(--blue);color:var(--text)}
+  .ptool.active{border-color:var(--amber);color:var(--amber)}
+  .ptool .cd{position:absolute;bottom:-7px;right:-6px;font-family:var(--mono);font-size:9px;background:var(--amber);color:#1c1304;border-radius:6px;padding:0 4px;line-height:13px}
+  .pvol{display:flex;align-items:center;gap:10px}
+  .pvol .vi{color:var(--muted);font-size:15px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100px;height:4px;border-radius:3px;background:var(--surface-2);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--blue);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:15px;height:15px;border:none;border-radius:50%;background:var(--blue);cursor:pointer}
+
+  :focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:4px}
+
+  @media(max-width:860px){.about{grid-template-columns:1fr}.week{grid-template-columns:repeat(3,1fr)}.foot{grid-template-columns:1fr 1fr}.nowcard{grid-template-columns:auto 1fr}.eq{display:none}}
+  @media(max-width:640px){
+    nav.links{display:none}.nav-live{display:flex}.week{grid-template-columns:repeat(2,1fr)}
+    .slot{grid-template-columns:80px 1fr}.slot .badge{grid-column:2;justify-self:start}
+    .pvol{display:none}.part{display:none}.player-in{grid-template-columns:auto 1fr auto}
+    .foot{grid-template-columns:1fr}.nowcard{grid-template-columns:1fr}.art{width:96px;height:96px}
+  }
+  @media(prefers-reduced-motion:reduce){.eq span{animation:none;height:24px}.dot{animation:none}*{scroll-behavior:auto}}
+</style>
+</head>
+<body class="paused">
+<div id="ambient"></div><div id="ambient-veil"></div>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <div class="brand"><span class="logo">149<b>FM</b></span><span class="freq">ONLINE · 24/7</span></div>
+    <nav class="links"><a href="#schedule">Schedule</a><a href="#recent">Recent</a><a href="#about">About</a><a href="#listen">Listen</a><a href="#support">Support</a></nav>
+    <div class="nav-live"><span class="dot"></span><span id="navState">ON AIR</span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <span class="onair"><span class="dot"></span><span id="heroState">ON AIR NOW</span></span>
+    <h1>RADIO WITH<br>NO <span class="num">RULES</span>.</h1>
+    <p class="tag"><b>149.0</b> — the frequency that doesn't exist on any FM dial. From DnB to Nu Metal, Jazz to Hip Hop. Online, non-stop, from one place.</p>
+
+    <div class="nowcard">
+      <img class="art" id="np-art" alt="Current track artwork" style="display:none">
+      <div class="art" id="np-art-ph">149</div>
+      <div class="nowmeta">
+        <div class="lbl">Now playing</div>
+        <div class="show" id="np-show">Connecting…</div>
+        <div class="track" id="np-track">loading stream…</div>
+        <div class="nxt" id="np-next"></div>
+        <div class="nowact">
+          <button class="chip" id="shareBtn">↗ Share</button>
+          <a class="chip" id="ytLink" target="_blank" rel="noopener">▶ YouTube</a>
+          <a class="chip" id="spLink" target="_blank" rel="noopener">♪ Spotify</a>
+        </div>
+      </div>
+      <div class="eq" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="heroplay">
+      <button class="btn-play" id="heroBtn" aria-label="Play stream" aria-pressed="false">
+        <span class="ico" id="heroIco">▶</span><span id="heroTxt">Listen live</span>
+      </button>
+      <span class="listeners">Listeners in RO, DE, ES, UK, BR &amp; beyond</span>
+    </div>
+  </section>
+
+  <section class="block" id="schedule">
+    <div class="head"><h2>Today's <span class="accent">lineup</span></h2><p>The highlighted show is on now. Everything else airs at a fixed time — so you can build a habit.</p></div>
+    <div class="today">
+      <div class="slot"><span class="time">06:30–12:00</span><div><div class="name">Woodstock 1969</div><div class="genre">Classic Rock</div></div><span></span></div>
+      <div class="slot now"><span class="time">11:00–14:00</span><div><div class="name">Mood 1 · Cleaning Music</div><div class="genre">Feel-good / Pop</div></div><span class="badge live">● On now</span></div>
+      <div class="slot"><span class="time">14:00–16:00</span><div><div class="name">Pop 24</div><div class="genre">Pop Hits</div></div><span class="badge next">Up next</span></div>
+      <div class="slot"><span class="time">16:00–20:00</span><div><div class="name">Indie 24</div><div class="genre">Indie / Alt</div></div><span></span></div>
+      <div class="slot"><span class="time">20:00–00:00</span><div><div class="name">New Rock 2026</div><div class="genre">Rock</div></div><span></span></div>
+    </div>
+    <div class="week">
+      <div class="day"><div class="d">Sun 21</div><ul><li><b>Indie 24</b>07–11</li><li><b>Alt Rock</b>17–21</li></ul></div>
+      <div class="day"><div class="d">Mon 22</div><ul><li><b>Morning Pop</b>05–12</li><li><b>Disco '97</b>14–17</li></ul></div>
+      <div class="day"><div class="d">Tue 23</div><ul><li><b>DnB</b>00–08</li><li><b>Hip Hop</b>09–12</li><li><b>New Rock</b>15–20</li></ul></div>
+      <div class="day is-today"><div class="d">Wed 24</div><ul><li><b>Woodstock</b>06–12</li><li><b>Pop 24</b>12–16</li><li><b>Indie</b>16–20</li></ul></div>
+      <div class="day"><div class="d">Thu 25</div><ul><li><b>Jazz</b>06–07</li><li><b>Funkadelic</b>14–17</li><li><b>Alt Rock</b>17–23</li></ul></div>
+      <div class="day"><div class="d">Fri 26</div><ul><li><b>Techno</b>01–06</li><li><b>Pop 24</b>07–11</li><li><b>DnB</b>17–24</li></ul></div>
+      <div class="day"><div class="d">Sat 27</div><ul><li><b>DnB</b>00–06</li><li><b>Nu Metal</b>11–17</li></ul></div>
+    </div>
+  </section>
+
+  <section class="block" id="recent">
+    <div class="head"><h2>Recently <span class="accent">played</span></h2><p>The last tracks on air — live from the stream. Tap any to find it.</p></div>
+    <div class="recent" id="recentList">
+      <div class="rrow"><div class="rart"></div><div class="rname"><b>Loading history…</b><span></span></div><span class="rt"></span></div>
+    </div>
+  </section>
+
+  <section class="block" id="about">
+    <div class="head"><h2>About <span class="accent">149FM</span></h2></div>
+    <div class="about">
+      <div>
+        <p><b>One person, one goal:</b> non-stop music, no ad breaks that ruin the mood, no playlists dictated by a corporate algorithm.</p>
+        <p>149FM is built from scratch — own server, own automation, everything learned along the way. It's not a corporate station; it's a passion project that broadcasts <b>24 hours a day</b>, every day of the year.</p>
+        <p>Our identity is the lack of a label: one night it's Drum &amp; Bass at 3am, the next it's Jazz at noon and Nu Metal on Saturday. <b>If it sounds good, it belongs here.</b></p>
+      </div>
+      <div class="facts">
+        <div class="fact"><div class="k">Broadcast</div><div class="v">24/7</div></div>
+        <div class="fact"><div class="k">Genres in rotation</div><div class="v">9+ <small>DnB to Jazz</small></div></div>
+        <div class="fact"><div class="k">Stream quality</div><div class="v">192 <small>kbps · MP3 stereo</small></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="listen">
+    <div class="head"><h2>Listen <span class="accent">anywhere</span></h2><p>On your phone, desktop, or your favourite radio app. Same stream, everywhere.</p></div>
+    <div class="apps">
+      <a class="app" href="#" id="webPlay"><div class="ai">▶</div><div><div class="at">Web player</div><div class="as">right here</div></div></a>
+      <a class="app" href="https://stream.zeno.fm/6vc4ddpr3ehvv.m3u"><div class="ai">♫</div><div><div class="at">.m3u</div><div class="as">VLC, Winamp…</div></div></a>
+      <a class="app" href="https://stream.zeno.fm/6vc4ddpr3ehvv.pls"><div class="ai">♪</div><div><div class="at">.pls</div><div class="as">external player</div></div></a>
+      <a class="app" href="#"><div class="ai">T</div><div><div class="at">TuneIn</div><div class="as">search "149FM"</div></div></a>
+      <a class="app" href="#"><div class="ai">Z</div><div><div class="at">Zeno.FM app</div><div class="as">iOS / Android</div></div></a>
+    </div>
+  </section>
+
+  <section class="block" id="support">
+    <div class="head"><h2>Support the <span class="accent">station</span></h2><p>149FM is free and ad-free. If it keeps you company, help keep it on air.</p></div>
+    <div class="support">
+      <a class="scard" href="#"><div class="si">☕</div><h3>Buy a coffee</h3><p>One-off tip — covers a day of server costs.</p></a>
+      <a class="scard" href="#"><div class="si">♥</div><h3>Monthly support</h3><p>Recurring help via Ko-fi / Patreon.</p></a>
+      <a class="scard" href="#"><div class="si">₿</div><h3>Crypto</h3><p>Send a little BTC / ETH to the station wallet.</p></a>
+      <a class="scard" href="#" id="shareCard"><div class="si">↗</div><h3>Share 149FM</h3><p>Costs nothing — tell one person who'd like it.</p></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div><div class="logo">149<b>FM</b></div><p>Independent online radio. Non-stop music, no genre rules. Broadcast with passion from Romania.</p></div>
+      <div><h4>Navigate</h4><ul><li><a href="#schedule">Schedule</a></li><li><a href="#recent">Recently played</a></li><li><a href="#about">About</a></li><li><a href="#listen">How to listen</a></li><li><a href="#support">Support</a></li></ul></div>
+      <div><h4>Connect</h4><ul><li><a href="#">Telegram</a></li><li><a href="#">Instagram</a></li><li><a href="#">Discord</a></li><li><a href="#">Contact</a></li></ul></div>
+    </div>
+    <div class="copy"><span>© 2026 149FM · All rights reserved</span><span>online · 24/7 · 192kbps</span></div>
+  </div>
+</footer>
+
+<div class="player">
+  <div class="player-in">
+    <button class="pp" id="ppBtn" aria-label="Play stream" aria-pressed="false"><span id="ppIco">▶</span></button>
+    <img class="part" id="p-art" alt="">
+    <div class="pinfo">
+      <div class="pl"><span class="dot"></span><span id="p-show">149FM</span></div>
+      <div class="pt" id="p-track">press play to start the stream</div>
+    </div>
+    <div class="ptools">
+      <button class="ptool" id="sleepBtn" title="Sleep timer" aria-label="Sleep timer">☾<span class="cd" id="sleepCd" style="display:none"></span></button>
+    </div>
+    <div class="pvol"><span class="vi">♪</span><input type="range" id="vol" min="0" max="100" value="80" aria-label="Volume"></div>
+  </div>
+</div>
+
+<audio id="audio" preload="none" crossorigin="anonymous"></audio>
+
+<script>
+(function(){
+  "use strict";
+  var STREAM = "https://stream.zeno.fm/6vc4ddpr3ehvv";
+  // metadata candidates, tried in order. Same-origin /radio/ avoids CORS entirely.
+  var META = [
+    "/radio/api/nowplaying_static/149fm.json",
+    "https://azura149fm.duckdns.org/api/nowplaying_static/149fm.json",
+    "/radio/api/nowplaying/149fm"
+  ];
+  var ZENO_SSE = "https://api.zeno.fm/mounts/metadata/subscribe/6vc4ddpr3ehvv";
+  var metaUrl = null, playing = false, lastTrack = "", lastArt = "", curArtist = "", curTitle = "";
+
+  function $(id){return document.getElementById(id);}
+  function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+  function setIcons(){
+    var ic = playing ? '❚❚' : '▶';
+    $('ppIco').textContent = ic; $('heroIco').textContent = ic;
+    $('heroTxt').textContent = playing ? 'Pause' : 'Listen live';
+    document.body.classList.toggle('paused', !playing);
+    $('ppBtn').setAttribute('aria-pressed', playing);
+    $('heroBtn').setAttribute('aria-pressed', playing);
+  }
+  function toggle(e){
+    if(e) e.preventDefault();
+    if(playing){ audio.pause(); playing=false; setIcons(); return; }
+    if(!audio.src) audio.src = STREAM;
+    var p = audio.play();
+    if(p && p.then){ p.then(function(){playing=true;setIcons();}).catch(function(){playing=true;setIcons();}); }
+    else { playing=true; setIcons(); }
+  }
+
+  var audio = $('audio');
+  $('ppBtn').addEventListener('click', toggle);
+  $('heroBtn').addEventListener('click', toggle);
+  $('webPlay').addEventListener('click', function(e){ e.preventDefault(); if(!playing) toggle(); window.scrollTo({top:0,behavior:'smooth'}); });
+  audio.addEventListener('pause', function(){ playing=false; setIcons(); });
+  audio.addEventListener('playing', function(){ playing=true; document.body.classList.remove('offline'); setIcons(); });
+  audio.addEventListener('error', markOffline);
+
+  var vol = $('vol');
+  try{ var sv = localStorage.getItem('149vol'); if(sv!==null) vol.value = sv; }catch(e){}
+  audio.volume = vol.value/100;
+  vol.addEventListener('input', function(e){ audio.volume = e.target.value/100; try{localStorage.setItem('149vol',e.target.value);}catch(err){} });
+
+  function markOffline(){ document.body.classList.add('offline'); $('navState').textContent='OFFLINE'; $('heroState').textContent='STATION OFFLINE'; }
+  function markOnline(){ document.body.classList.remove('offline'); $('navState').textContent='ON AIR'; $('heroState').textContent='ON AIR NOW'; }
+
+  function setArt(url){
+    var img=$('np-art'), ph=$('np-art-ph'), part=$('p-art'), amb=$('ambient');
+    if(url && url!==lastArt){
+      lastArt=url;
+      img.onload=function(){img.style.display='';ph.style.display='none';};
+      img.onerror=function(){img.style.display='none';ph.style.display='';};
+      img.src=url; part.src=url;
+      amb.style.backgroundImage="url('"+url+"')"; document.body.classList.add('has-art');
+    } else if(!url){ img.style.display='none'; ph.style.display=''; document.body.classList.remove('has-art'); }
+  }
+  function searchUrls(artist,title){
+    var q = encodeURIComponent(((artist||'')+' '+(title||'')).trim());
+    $('ytLink').href = 'https://www.youtube.com/results?search_query='+q;
+    $('spLink').href = 'https://open.spotify.com/search/'+q;
+  }
+  function applyNow(show, artist, title, next){
+    curArtist=artist||''; curTitle=title||'';
+    var track = artist ? (artist+' — '+title) : (title||'—');
+    $('np-show').textContent = show || '149FM';
+    $('np-track').textContent = track;
+    $('p-show').textContent = show || '149FM';
+    $('p-track').textContent = (track==='—'?'149FM':track);
+    $('np-next').innerHTML = next ? ('<b style="color:var(--muted-2);font-weight:400">Up next:</b> '+esc(next)) : '';
+    searchUrls(artist,title);
+    if(track && track!==lastTrack){
+      lastTrack=track;
+      document.title = (playing?'♪ ':'')+track+' · 149FM';
+      updateMediaSession(show,artist,title);
+    }
+  }
+  function relTime(ts){
+    if(!ts) return '';
+    var diff=Math.floor(Date.now()/1000-ts);
+    if(diff<60) return 'now'; if(diff<3600) return Math.floor(diff/60)+'m ago'; return Math.floor(diff/3600)+'h ago';
+  }
+  function renderHistory(hist){
+    if(!hist||!hist.length) return; var html='';
+    for(var i=0;i<Math.min(hist.length,5);i++){
+      var s=hist[i].song||{}, q=encodeURIComponent(((s.artist||'')+' '+(s.title||s.text||'')).trim());
+      var art=s.art?'<img class="rart" src="'+esc(s.art)+'" alt="" onerror="this.style.visibility=\'hidden\'">':'<div class="rart"></div>';
+      var title=esc(s.title||s.text||'—'), artist=s.artist?'<span>'+esc(s.artist)+'</span>':'';
+      html+='<a class="rrow" href="https://www.youtube.com/results?search_query='+q+'" target="_blank" rel="noopener">'+art+'<div class="rname"><b>'+title+'</b>'+artist+'</div><span class="rt">'+relTime(hist[i].played_at)+'</span></a>';
+    }
+    $('recentList').innerHTML=html;
+  }
+  function updateMediaSession(show,artist,title){
+    if(!('mediaSession' in navigator)) return;
+    try{
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: title||'149FM', artist: artist||show||'149FM Online Radio', album:'149FM',
+        artwork: lastArt?[{src:lastArt,sizes:'512x512',type:'image/jpeg'}]:[]
+      });
+      navigator.mediaSession.setActionHandler('play', function(){ if(!playing) toggle(); });
+      navigator.mediaSession.setActionHandler('pause', function(){ if(playing) toggle(); });
+    }catch(e){}
+  }
+
+  function fetchJSON(url){
+    return fetch(url+(url.indexOf('?')>-1?'&':'?')+'t='+Date.now(),{cache:'no-store'}).then(function(r){ if(!r.ok) throw 0; return r.json(); });
+  }
+  function handleNP(d){
+    if(!d||!d.now_playing) return false;
+    markOnline();
+    var np=d.now_playing, song=np.song||{};
+    var show=(d.live&&d.live.is_live&&d.live.streamer_name)?d.live.streamer_name:(np.playlist||'149FM');
+    var artist=song.artist||'', title=song.title||song.text||'';
+    var next=(d.playing_next&&d.playing_next.song)?(d.playing_next.song.text||d.playing_next.song.title):'';
+    setArt(song.art||'');
+    applyNow(show,artist,title,next);
+    renderHistory(d.song_history);
+    return true;
+  }
+  function poll(){
+    if(metaUrl){ fetchJSON(metaUrl).then(handleNP).catch(function(){ metaUrl=null; }); return; }
+    var i=0;
+    (function tryNext(){
+      if(i>=META.length) return; var u=META[i++];
+      fetchJSON(u).then(function(d){ if(handleNP(d)) metaUrl=u; else tryNext(); }).catch(tryNext);
+    })();
+  }
+
+  /* ZenoFM fallback (title only) if AzuraCast is unreachable */
+  try{
+    var es=new EventSource(ZENO_SSE);
+    es.onmessage=function(ev){ try{ var d=JSON.parse(ev.data); var t=d.streamTitle||d.title||""; if(t && !metaUrl){ var parts=t.split(' - '); if(parts.length>1) applyNow('149FM',parts[0],parts.slice(1).join(' - '),''); else applyNow('149FM','',t,''); } }catch(e){} };
+  }catch(e){}
+
+  /* Share */
+  function shareNow(e){
+    if(e) e.preventDefault();
+    var txt = (curTitle? '149FM — now playing: '+(curArtist?curArtist+' — ':'')+curTitle : 'Listening to 149FM');
+    var url = location.href.split('#')[0];
+    if(navigator.share){ navigator.share({title:'149FM',text:txt,url:url}).catch(function(){}); }
+    else if(navigator.clipboard){ navigator.clipboard.writeText(txt+' '+url); $('shareBtn').textContent='✓ Copied'; setTimeout(function(){$('shareBtn').textContent='↗ Share';},1500); }
+  }
+  $('shareBtn').addEventListener('click', shareNow);
+  $('shareCard').addEventListener('click', shareNow);
+
+  /* Sleep timer: off → 15 → 30 → 60 min */
+  var sleepMin=[0,15,30,60], sleepIdx=0, sleepEnd=0, sleepTick=null;
+  $('sleepBtn').addEventListener('click', function(){
+    sleepIdx=(sleepIdx+1)%sleepMin.length; var m=sleepMin[sleepIdx];
+    clearInterval(sleepTick);
+    if(m===0){ $('sleepBtn').classList.remove('active'); $('sleepCd').style.display='none'; return; }
+    $('sleepBtn').classList.add('active'); $('sleepCd').style.display='';
+    sleepEnd=Date.now()+m*60000;
+    function upd(){ var left=Math.max(0,sleepEnd-Date.now()); var mm=Math.ceil(left/60000); $('sleepCd').textContent=mm; if(left<=0){ clearInterval(sleepTick); if(playing) toggle(); $('sleepBtn').classList.remove('active'); $('sleepCd').style.display='none'; sleepIdx=0; } }
+    upd(); sleepTick=setInterval(upd,1000);
+  });
+
+  /* Keyboard: space=play/pause, ↑/↓ volume, m=mute */
+  var preMute=null;
+  document.addEventListener('keydown', function(e){
+    var tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
+    if(e.code==='Space'){ e.preventDefault(); toggle(); }
+    else if(e.code==='ArrowUp'){ e.preventDefault(); vol.value=Math.min(100,+vol.value+5); audio.volume=vol.value/100; }
+    else if(e.code==='ArrowDown'){ e.preventDefault(); vol.value=Math.max(0,+vol.value-5); audio.volume=vol.value/100; }
+    else if(e.key==='m'){ if(preMute===null){ preMute=vol.value; vol.value=0; } else { vol.value=preMute; preMute=null; } audio.volume=vol.value/100; }
+  });
+
+  /* PWA */
+  if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+
+  setIcons(); poll(); setInterval(poll, 20000);
+})();
+</script>
+</body>
+</html>

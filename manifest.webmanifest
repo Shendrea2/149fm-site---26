@@ -1,0 +1,15 @@
+{
+  "name": "149FM — Online Radio",
+  "short_name": "149FM",
+  "description": "Independent online radio, 24/7. No genre rules.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0E1219",
+  "theme_color": "#0E1219",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
