@@ -227,23 +227,11 @@
   </section>
 
   <section class="block" id="schedule">
-    <div class="head"><h2>Today's <span class="accent">lineup</span></h2><p>The highlighted show is on now. Everything else airs at a fixed time — so you can build a habit.</p></div>
-    <div class="today">
-      <div class="slot"><span class="time">06:30–12:00</span><div><div class="name">Woodstock 1969</div><div class="genre">Classic Rock</div></div><span></span></div>
-      <div class="slot now"><span class="time">11:00–14:00</span><div><div class="name">Mood 1 · Cleaning Music</div><div class="genre">Feel-good / Pop</div></div><span class="badge live">● On now</span></div>
-      <div class="slot"><span class="time">14:00–16:00</span><div><div class="name">Pop 24</div><div class="genre">Pop Hits</div></div><span class="badge next">Up next</span></div>
-      <div class="slot"><span class="time">16:00–20:00</span><div><div class="name">Indie 24</div><div class="genre">Indie / Alt</div></div><span></span></div>
-      <div class="slot"><span class="time">20:00–00:00</span><div><div class="name">New Rock 2026</div><div class="genre">Rock</div></div><span></span></div>
+    <div class="head"><h2>On now &amp; <span class="accent">coming up</span></h2><p>Live from the station — updates automatically whenever you change the schedule in AzuraCast.</p></div>
+    <div class="today" id="todayList">
+      <div class="slot"><span class="time">—</span><div><div class="name">Loading schedule…</div></div><span></span></div>
     </div>
-    <div class="week">
-      <div class="day"><div class="d">Sun 21</div><ul><li><b>Indie 24</b>07–11</li><li><b>Alt Rock</b>17–21</li></ul></div>
-      <div class="day"><div class="d">Mon 22</div><ul><li><b>Morning Pop</b>05–12</li><li><b>Disco '97</b>14–17</li></ul></div>
-      <div class="day"><div class="d">Tue 23</div><ul><li><b>DnB</b>00–08</li><li><b>Hip Hop</b>09–12</li><li><b>New Rock</b>15–20</li></ul></div>
-      <div class="day is-today"><div class="d">Wed 24</div><ul><li><b>Woodstock</b>06–12</li><li><b>Pop 24</b>12–16</li><li><b>Indie</b>16–20</li></ul></div>
-      <div class="day"><div class="d">Thu 25</div><ul><li><b>Jazz</b>06–07</li><li><b>Funkadelic</b>14–17</li><li><b>Alt Rock</b>17–23</li></ul></div>
-      <div class="day"><div class="d">Fri 26</div><ul><li><b>Techno</b>01–06</li><li><b>Pop 24</b>07–11</li><li><b>DnB</b>17–24</li></ul></div>
-      <div class="day"><div class="d">Sat 27</div><ul><li><b>DnB</b>00–06</li><li><b>Nu Metal</b>11–17</li></ul></div>
-    </div>
+    <div class="week" id="weekGrid"></div>
   </section>
 
   <section class="block" id="recent">
@@ -317,12 +305,12 @@
   </div>
 </div>
 
-<audio id="audio" preload="none" crossorigin="anonymous"></audio>
+<audio id="audio" preload="none"></audio>
 
 <script>
 (function(){
   "use strict";
-  var STREAM = "https://stream.zeno.fm/6vc4ddpr3ehvv";
+  var STREAM = "https://azura149fm.duckdns.org/listen/149fm/radio.mp3";  // site player → AzuraCast direct (full stats + bot control). ZenoFM feed stays untouched.
   // metadata candidates, tried in order. Same-origin /radio/ avoids CORS entirely.
   var META = [
     "/radio/api/nowplaying_static/149fm.json",
@@ -488,10 +476,54 @@
     else if(e.key==='m'){ if(preMute===null){ preMute=vol.value; vol.value=0; } else { vol.value=preMute; preMute=null; } audio.volume=vol.value/100; }
   });
 
+  /* ---- Dynamic schedule from AzuraCast (same-origin via /radio/, no CORS) ---- */
+  var SCHED = ["/radio/api/station/149fm/schedule","https://azura149fm.duckdns.org/api/station/149fm/schedule"];
+  var DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function ymd(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+  function hm(iso){ return (iso||'').substr(11,5); }            // station-local time straight from ISO
+  function dayLabel(ymdStr){ var p=ymdStr.split('-'); var dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])); return DOW[dt.getUTCDay()]+' '+(+p[2]); }
+
+  function renderLineup(items){
+    var start=0; for(var k=0;k<items.length;k++){ if(items[k].is_now){ start=k; break; } }
+    var list=items.slice(start, start+5), html='', shownNext=false;
+    if(!list.length){ return; }
+    list.forEach(function(it){
+      var badge='';
+      if(it.is_now){ badge='<span class="badge live">● On now</span>'; }
+      else if(!shownNext){ badge='<span class="badge next">Up next</span>'; shownNext=true; }
+      html+='<div class="slot'+(it.is_now?' now':'')+'"><span class="time">'+hm(it.start)+'–'+hm(it.end)+'</span><div><div class="name">'+esc(it.name||it.title||'—')+'</div></div>'+(badge||'<span></span>')+'</div>';
+    });
+    $('todayList').innerHTML=html;
+  }
+  function renderWeek(items){
+    var byDay={}, order=[], todayStr=null;
+    items.forEach(function(it){ if(it.is_now) todayStr=(it.start||'').substr(0,10); });
+    items.forEach(function(it){ var d=(it.start||'').substr(0,10); if(!d) return; if(!byDay[d]){ byDay[d]=[]; order.push(d); } byDay[d].push(it); });
+    if(order.length<2){ $('weekGrid').style.display='none'; return; }   // only ~1 day returned → hide grid
+    var html='';
+    order.slice(0,7).forEach(function(d){
+      var lis=byDay[d].slice(0,4).map(function(it){ return '<li><b>'+esc(it.name||it.title)+'</b>'+hm(it.start)+'–'+hm(it.end)+'</li>'; }).join('');
+      html+='<div class="day'+(d===todayStr?' is-today':'')+'"><div class="d">'+dayLabel(d)+'</div><ul>'+lis+'</ul></div>';
+    });
+    $('weekGrid').innerHTML=html; $('weekGrid').style.display='';
+  }
+  function fetchSchedule(){
+    var now=new Date(), end=new Date(now.getTime()+7*86400000);
+    var qs='?start='+ymd(now)+'&end='+ymd(end);
+    var i=0;
+    (function tryNext(){
+      if(i>=SCHED.length) return; var u=SCHED[i++]+qs;
+      fetch(u,{cache:'no-store'}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+        .then(function(items){ if(Array.isArray(items)&&items.length){ renderLineup(items); renderWeek(items); } })
+        .catch(tryNext);
+    })();
+  }
+
   /* PWA */
   if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
 
   setIcons(); poll(); setInterval(poll, 20000);
+  fetchSchedule(); setInterval(fetchSchedule, 300000);
 })();
 </script>
 </body>
